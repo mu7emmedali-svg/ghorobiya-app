@@ -1,13 +1,11 @@
-
-
 let lat,lng;
 
-function toGhorobi(timeString, sunset){
+function toGhorobi(timeString, sunsetDate){
   const parts = timeString.split(":");
   const prayerDate = new Date();
   prayerDate.setHours(parts[0], parts[1], 0);
 
-  let diff = prayerDate - sunset;
+  let diff = prayerDate - sunsetDate;
   if(diff < 0){
     diff += 24*60*60*1000;
   }
@@ -18,10 +16,11 @@ function toGhorobi(timeString, sunset){
   return String(h).padStart(2,'0')+":"+String(m).padStart(2,'0');
 }
 
-function startClock(sunset){
+function startClock(sunsetDate){
   setInterval(()=>{
     const now = new Date();
-    let diff = now - sunset;
+
+    let diff = now - sunsetDate;
     if(diff < 0){
       diff += 24*60*60*1000;
     }
@@ -43,11 +42,6 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   lat = pos.coords.latitude;
   lng = pos.coords.longitude;
 
-  const sunTimes = SunCalc.getTimes(new Date(),lat,lng);
-  const sunset = sunTimes.sunset;
-
-  startClock(sunset);
-
   const response = await fetch(
     `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=2`
   );
@@ -55,12 +49,17 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   const data = await response.json();
   const timings = data.data.timings;
 
-  document.getElementById("fajr").textContent = toGhorobi(timings.Fajr,sunset);
-  document.getElementById("sunrise").textContent = toGhorobi(timings.Sunrise,sunset);
-  document.getElementById("dhuhr").textContent = toGhorobi(timings.Dhuhr,sunset);
-  document.getElementById("asr").textContent = toGhorobi(timings.Asr,sunset);
-  document.getElementById("maghrib").textContent = toGhorobi(timings.Maghrib,sunset);
-  document.getElementById("isha").textContent = toGhorobi(timings.Isha,sunset);
+  const sunsetParts = timings.Sunset.split(":");
+  const sunsetDate = new Date();
+  sunsetDate.setHours(sunsetParts[0], sunsetParts[1], 0);
+
+  startClock(sunsetDate);
+
+  document.getElementById("fajr").textContent = toGhorobi(timings.Fajr,sunsetDate);
+  document.getElementById("sunrise").textContent = toGhorobi(timings.Sunrise,sunsetDate);
+  document.getElementById("dhuhr").textContent = toGhorobi(timings.Dhuhr,sunsetDate);
+  document.getElementById("asr").textContent = toGhorobi(timings.Asr,sunsetDate);
+  document.getElementById("maghrib").textContent = toGhorobi(timings.Maghrib,sunsetDate);
+  document.getElementById("isha").textContent = toGhorobi(timings.Isha,sunsetDate);
 
 });
-
