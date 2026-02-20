@@ -47,6 +47,18 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   );
 
   const data = await response.json();
+  const hijri = data.data.date.hijri;
+const timezone = data.meta.timezone;
+
+document.getElementById("location").textContent =
+"الموقع: " + timezone;
+
+document.getElementById("hijriDate").textContent =
+"التاريخ الهجري: " +
+hijri.day + " " +
+hijri.month.ar + " " +
+hijri.year + " هـ";
+  
   const timings = data.data.timings;
 
   const sunsetParts = timings.Sunset.split(":");
@@ -63,3 +75,4 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   document.getElementById("isha").textContent = toGhorobi(timings.Isha,sunsetDate);
 
 });
+
