@@ -36,11 +36,12 @@ function startClock(sunsetDate){
   },1000);
 }
 
-async function init(){
+navigator.geolocation.getCurrentPosition(async pos=>{
 
-  const lat = 41.0082;
-  const lng = 28.9784;
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
 
+  // ======== جلب أوقات الصلاة ========
   const response = await fetch(
     `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=2`
   );
@@ -49,10 +50,6 @@ async function init(){
   const timings = data.data.timings;
 
   const hijri = data.data.date.hijri;
-  const timezone = data.data.meta.timezone;
-
-  document.getElementById("location").textContent =
-    "الموقع: " + timezone;
 
   document.getElementById("hijriDate").textContent =
     "التاريخ الهجري: " +
@@ -60,12 +57,32 @@ async function init(){
     hijri.month.ar + " " +
     hijri.year + " هـ";
 
+  // ======== جلب اسم المدينة الحقيقي ========
+  const geoResponse = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+  );
+
+  const geoData = await geoResponse.json();
+
+  const city =
+    geoData.address.city ||
+    geoData.address.town ||
+    geoData.address.village ||
+    "";
+
+  const country = geoData.address.country || "";
+
+  document.getElementById("location").textContent =
+    "الموقع: " + city + " - " + country;
+
+  // ======== الغروب ========
   const sunsetParts = timings.Sunset.split(":");
   const sunsetDate = new Date();
   sunsetDate.setHours(sunsetParts[0], sunsetParts[1], 0);
 
   startClock(sunsetDate);
 
+  // ======== أوقات الصلاة غروبي ========
   document.getElementById("fajr").textContent =
     toGhorobi(timings.Fajr, sunsetDate);
 
@@ -84,6 +101,4 @@ async function init(){
   document.getElementById("isha").textContent =
     toGhorobi(timings.Isha, sunsetDate);
 
-}
-
-init();
+});
