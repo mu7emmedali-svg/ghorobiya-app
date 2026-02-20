@@ -1,6 +1,4 @@
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("service-worker.js");
-}
+
 
 let lat,lng;
 
@@ -65,3 +63,4 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   document.getElementById("isha").textContent = toGhorobi(timings.Isha,sunset);
 
 });
+
