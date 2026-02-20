@@ -1,72 +1,66 @@
 let maghribMinutes = null;
+let prayers = {};
 
-function cleanTime(timeStr) {
-    return timeStr.split(" ")[0];
-}
-
-function toMinutes(timeStr) {
-    const [h, m] = cleanTime(timeStr).split(":").map(Number);
+function toMin(t) {
+    const [h, m] = t.split(':').map(Number);
     return h * 60 + m;
 }
 
-function formatGhorobi(timeStr) {
-    if (maghribMinutes === null) return "--:--";
-    let diff = toMinutes(timeStr) - maghribMinutes;
-    if (diff < 0) diff += 1440;
-    const h = Math.floor(diff / 60);
-    const m = diff % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+function fmtGhorobi(t) {
+    let d = toMin(t.split(' ')[0]) - maghribMinutes;
+    if (d < 0) d += 1440;
+    return `${String(Math.floor(d/60)).padStart(2,'0')}:${String(d%60).padStart(2,'0')}`;
 }
 
 async function init() {
     navigator.geolocation.getCurrentPosition(async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
+        const lang = navigator.language.split('-')[0]; // لغة المتصفح
+
         const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=13`);
         const data = await res.json();
-        const t = data.data.timings;
-        
-        maghribMinutes = toMinutes(t.Maghrib);
+        prayers = data.data.timings;
+        maghribMinutes = toMin(prayers.Maghrib);
 
-        document.getElementById("fajr").textContent = formatGhorobi(t.Fajr);
-        document.getElementById("sunrise").textContent = formatGhorobi(t.Sunrise);
-        document.getElementById("dhuhr").textContent = formatGhorobi(t.Dhuhr);
-        document.getElementById("asr").textContent = formatGhorobi(t.Asr);
-        document.getElementById("isha").textContent = formatGhorobi(t.Isha);
-        
-        const hj = data.data.date.hijri;
-        document.getElementById("hijriDate").textContent = `${hj.day} ${hj.month.ar} ${hj.year} هـ`;
+        ['Fajr','Sunrise','Dhuhr','Asr','Isha'].forEach(p => {
+            document.getElementById(p.toLowerCase()).innerText = fmtGhorobi(prayers[p]);
+        });
 
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-            headers: { 'User-Agent': 'GhorobiApp/1.0' }
-        })
-        .then(r => r.json())
-        .then(geo => {
-            const city = geo.address.city || geo.address.town || "موقعك الحالي";
-            document.getElementById("location").textContent = city;
-        }).catch(() => document.getElementById("location").textContent = "تم تحديد الموقع");
+        document.getElementById('hijriDate').innerText = `${data.data.date.hijri.day} ${data.data.date.hijri.month.ar} ${data.data.date.hijri.year}`;
 
-    }, () => {
-        document.getElementById("location").textContent = "يرجى تفعيل الموقع";
+        // اسم المدينة حسب اللغة
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=${lang}`)
+        .then(r => r.json()).then(g => {
+            document.getElementById('location').innerText = g.address.city || g.address.town || "موقعك";
+        });
     });
 }
 
-function updateClock() {
-    if (maghribMinutes === null) return;
+function update() {
+    if (!maghribMinutes) return;
     const now = new Date();
-    const currentTotalMin = now.getHours() * 60 + now.getMinutes();
-    let diff = currentTotalMin - maghribMinutes;
-    if (diff < 0) diff += 1440;
-    const h = Math.floor(diff / 60);
-    const m = diff % 60;
-    const s = now.getSeconds();
-    document.getElementById("clock").textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    if (h === 0 && m === 0 && s === 0) init();
+    const curMin = now.getHours() * 60 + now.getMinutes();
+    
+    // الساعة الغروبية
+    let d = curMin - maghribMinutes;
+    if (d < 0) d += 1440;
+    document.getElementById('clock').innerText = 
+        `${String(Math.floor(d/60)).padStart(2,'0')}:${String(d%60).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+    // العداد التنازلي
+    const pNames = {Fajr:"الفجر", Sunrise:"الشروق", Dhuhr:"الظهر", Asr:"العصر", Maghrib:"المغرب", Isha:"العشاء"};
+    let nextP = null, minDiff = Infinity;
+    for (let k in pNames) {
+        let diff = toMin(prayers[k].split(' ')[0]) - curMin;
+        if (diff <= 0) diff += 1440;
+        if (diff < minDiff) { minDiff = diff; nextP = pNames[k]; }
+    }
+    document.getElementById('countdown').innerText = `باقي لـ ${nextP}: ${Math.floor(minDiff/60)}س و ${minDiff%60}د`;
 }
 
 init();
-setInterval(updateClock, 1000);
+setInterval(update, 1000);
 
-// تسجيل الـ Service Worker (تأكد من تطابق الاسم مع الصورة)
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js');
 }
