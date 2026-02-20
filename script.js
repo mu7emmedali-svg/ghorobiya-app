@@ -66,10 +66,10 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
     data.data.date.hijri.month.ar + " " +
     data.data.date.hijri.year + " هـ";
 
-  // حساب وقت المغرب بالدقائق
+  // حساب وقت المغرب أولاً
   maghribMinutes = convertToMinutes(timings.Maghrib);
 
-  // عرض أوقات الصلاة بالتوقيت الغروبي
+  // بعد حساب المغرب نحول كل أوقات الصلاة للغروبي
   document.getElementById("fajr").textContent =
     "الفجر: " + toGhorobi(timings.Fajr);
 
@@ -88,12 +88,14 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
   document.getElementById("isha").textContent =
     "العشاء: " + toGhorobi(timings.Isha);
 
-  // بدء تحديث الساعة
+  // بدء تحديث الساعة الغروبية
   setInterval(updateGhorobiClock,1000);
 
-  // جلب اسم المدينة باللغة المحلية
+  // جلب اسم المدينة حسب لغة المتصفح
+  const userLang = navigator.language;
+
   const geoRes = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=native`
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=${userLang}`
   );
 
   const geoData = await geoRes.json();
@@ -109,8 +111,7 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
   document.getElementById("location").textContent =
     city + " - " + country;
 
-},
-()=>{
+},()=>{
   document.getElementById("location").textContent =
     "يرجى السماح بالوصول إلى الموقع";
 });
