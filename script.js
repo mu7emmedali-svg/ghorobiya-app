@@ -1,15 +1,29 @@
-<script>
-
 let maghribMinutes = null;
 
-// تنظيف الوقت من (+03)
+// تنظيف الوقت من (+03) أو (EET)
 function convertToMinutes(timeStr){
-  const cleanTime = timeStr.split(" ")[0];
-  const [h,m] = cleanTime.split(":").map(Number);
+  const clean = timeStr.split(" ")[0];
+  const [h,m] = clean.split(":").map(Number);
   return h*60 + m;
 }
 
-// الساعة الغروبية
+// تحويل أي وقت إلى توقيت غروبي
+function toGhorobi(timeStr){
+  const prayerMinutes = convertToMinutes(timeStr);
+  let diff = prayerMinutes - maghribMinutes;
+
+  if(diff < 0){
+    diff += 1440; // نرجع لليوم السابق
+  }
+
+  const h = Math.floor(diff/60);
+  const m = diff % 60;
+
+  return String(h).padStart(2,'0') + ":" +
+         String(m).padStart(2,'0');
+}
+
+// تحديث الساعة الغروبية كل ثانية
 function updateGhorobiClock(){
   if(maghribMinutes === null) return;
 
@@ -31,27 +45,19 @@ function updateGhorobiClock(){
     String(seconds).padStart(2,'0');
 }
 
-// جلب الموقع
-navigator.geolocation.getCurrentPosition(async (position)=>{
+// تحديد الموقع
+navigator.geolocation.getCurrentPosition(async (pos)=>{
 
-  const lat = position.coords.latitude;
-  const lng = position.coords.longitude;
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
 
-  // جلب أوقات الصلاة حسب الموقع
+  // جلب أوقات الصلاة حسب الإحداثيات
   const res = await fetch(
     `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=13`
   );
 
   const data = await res.json();
   const timings = data.data.timings;
-
-  // عرض أوقات الصلاة
-  document.getElementById("fajr").textContent = "الفجر: " + timings.Fajr;
-  document.getElementById("sunrise").textContent = "الشروق: " + timings.Sunrise;
-  document.getElementById("dhuhr").textContent = "الظهر: " + timings.Dhuhr;
-  document.getElementById("asr").textContent = "العصر: " + timings.Asr;
-  document.getElementById("maghrib").textContent = "المغرب: " + timings.Maghrib;
-  document.getElementById("isha").textContent = "العشاء: " + timings.Isha;
 
   // التاريخ الهجري
   document.getElementById("hijriDate").textContent =
@@ -60,8 +66,29 @@ navigator.geolocation.getCurrentPosition(async (position)=>{
     data.data.date.hijri.month.ar + " " +
     data.data.date.hijri.year + " هـ";
 
-  // حساب المغرب للساعة الغروبية
+  // حساب وقت المغرب بالدقائق
   maghribMinutes = convertToMinutes(timings.Maghrib);
+
+  // عرض أوقات الصلاة بالتوقيت الغروبي
+  document.getElementById("fajr").textContent =
+    "الفجر: " + toGhorobi(timings.Fajr);
+
+  document.getElementById("sunrise").textContent =
+    "الشروق: " + toGhorobi(timings.Sunrise);
+
+  document.getElementById("dhuhr").textContent =
+    "الظهر: " + toGhorobi(timings.Dhuhr);
+
+  document.getElementById("asr").textContent =
+    "العصر: " + toGhorobi(timings.Asr);
+
+  document.getElementById("maghrib").textContent =
+    "المغرب: 00:00";
+
+  document.getElementById("isha").textContent =
+    "العشاء: " + toGhorobi(timings.Isha);
+
+  // بدء تحديث الساعة
   setInterval(updateGhorobiClock,1000);
 
   // جلب اسم المدينة باللغة المحلية
@@ -87,5 +114,3 @@ navigator.geolocation.getCurrentPosition(async (position)=>{
   document.getElementById("location").textContent =
     "يرجى السماح بالوصول إلى الموقع";
 });
-
-</script>
