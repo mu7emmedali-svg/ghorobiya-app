@@ -1,5 +1,3 @@
-let lat, lng;
-
 function toGhorobi(timeString, sunsetDate){
   const parts = timeString.split(":");
   const prayerDate = new Date();
@@ -38,10 +36,10 @@ function startClock(sunsetDate){
   },1000);
 }
 
-navigator.geolocation.getCurrentPosition(async pos=>{
+async function init(){
 
-  lat = pos.coords.latitude;
-  lng = pos.coords.longitude;
+  const lat = 41.0082;
+  const lng = 28.9784;
 
   const response = await fetch(
     `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=2`
@@ -50,9 +48,8 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   const data = await response.json();
   const timings = data.data.timings;
 
-  // ===== اسم الموقع =====
   const hijri = data.data.date.hijri;
-  const timezone = data.meta.timezone;
+  const timezone = data.data.meta.timezone;
 
   document.getElementById("location").textContent =
     "الموقع: " + timezone;
@@ -63,14 +60,12 @@ navigator.geolocation.getCurrentPosition(async pos=>{
     hijri.month.ar + " " +
     hijri.year + " هـ";
 
-  // ===== الغروب =====
   const sunsetParts = timings.Sunset.split(":");
   const sunsetDate = new Date();
   sunsetDate.setHours(sunsetParts[0], sunsetParts[1], 0);
 
   startClock(sunsetDate);
 
-  // ===== أوقات الصلاة غروبي =====
   document.getElementById("fajr").textContent =
     toGhorobi(timings.Fajr, sunsetDate);
 
@@ -89,4 +84,6 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   document.getElementById("isha").textContent =
     toGhorobi(timings.Isha, sunsetDate);
 
-});
+}
+
+init();
