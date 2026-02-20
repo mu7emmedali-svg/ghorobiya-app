@@ -1,3 +1,30 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>الساعة والغروبي</title>
+<style>
+  body { font-family: sans-serif; text-align: center; padding: 50px; }
+  #clock { font-size: 3em; margin-bottom: 20px; }
+  .prayer { font-size: 1.5em; margin: 5px 0; }
+  #hijriDate, #location { margin: 10px 0; font-size: 1.2em; }
+</style>
+</head>
+<body>
+
+<div id="clock">--:--:--</div>
+
+<div id="hijriDate">التاريخ الهجري: ...</div>
+<div id="location">الموقع: ...</div>
+
+<div class="prayer" id="fajr">الفجر: --:--</div>
+<div class="prayer" id="sunrise">الشروق: --:--</div>
+<div class="prayer" id="dhuhr">الظهر: --:--</div>
+<div class="prayer" id="asr">العصر: --:--</div>
+<div class="prayer" id="maghrib">المغرب: --:--</div>
+<div class="prayer" id="isha">العشاء: --:--</div>
+
+<script>
 let maghribMinutes = null;
 
 // تنظيف الوقت من (+03) أو (EET)
@@ -47,15 +74,13 @@ function updateGhorobiClock(){
 
 // تحديد الموقع
 navigator.geolocation.getCurrentPosition(async (pos)=>{
-
   const lat = pos.coords.latitude;
   const lng = pos.coords.longitude;
 
-  // جلب أوقات الصلاة حسب الإحداثيات
+  // جلب أوقات الصلاة
   const res = await fetch(
     `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=13`
   );
-
   const data = await res.json();
   const timings = data.data.timings;
 
@@ -66,10 +91,10 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
     data.data.date.hijri.month.ar + " " +
     data.data.date.hijri.year + " هـ";
 
-  // حساب وقت المغرب أولاً
+  // حساب المغرب أولاً
   maghribMinutes = convertToMinutes(timings.Maghrib);
 
-  // بعد حساب المغرب نحول كل أوقات الصلاة للغروبي
+  // تحويل كل أوقات الصلاة للغروبي
   document.getElementById("fajr").textContent =
     "الفجر: " + toGhorobi(timings.Fajr);
 
@@ -91,13 +116,11 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
   // بدء تحديث الساعة الغروبية
   setInterval(updateGhorobiClock,1000);
 
-  // جلب اسم المدينة حسب لغة المتصفح
+  // اسم المدينة حسب لغة المتصفح
   const userLang = navigator.language;
-
   const geoRes = await fetch(
     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=${userLang}`
   );
-
   const geoData = await geoRes.json();
 
   const city =
@@ -115,3 +138,7 @@ navigator.geolocation.getCurrentPosition(async (pos)=>{
   document.getElementById("location").textContent =
     "يرجى السماح بالوصول إلى الموقع";
 });
+</script>
+
+</body>
+</html>
