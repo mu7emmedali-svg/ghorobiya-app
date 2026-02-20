@@ -1,18 +1,27 @@
-self.addEventListener("install",e=>{
+const CACHE_NAME = "ghorobi-v1";
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./style.css",
+  "./script.js",
+  "./manifest.json",
+  "https://cdn-icons-png.flaticon.com/512/3222/3222800.png"
+];
+
+// تثبيت الـ Service Worker وحفظ الملفات في الكاش
+self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open("ghorobi").then(cache=>{
-      return cache.addAll([
-        "./",
-        "./index.html",
-        "./style.css",
-        "./script.js"
-      ]);
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
     })
   );
 });
 
-self.addEventListener("fetch",e=>{
+// استراتيجية الاستجابة: البحث في الكاش أولاً ثم الشبكة
+self.addEventListener("fetch", (e) => {
   e.respondWith(
-    caches.match(e.request).then(res=>res||fetch(e.request))
+    caches.match(e.request).then((res) => {
+      return res || fetch(e.request);
+    })
   );
 });
