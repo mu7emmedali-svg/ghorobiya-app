@@ -4,26 +4,29 @@ if("serviceWorker" in navigator){
 
 let lat,lng;
 
-function toGhorobi(time, sunset){
-  let diff = time - sunset;
+function toGhorobi(timeString, sunset){
+  const parts = timeString.split(":");
+  const prayerDate = new Date();
+  prayerDate.setHours(parts[0], parts[1], 0);
+
+  let diff = prayerDate - sunset;
   if(diff < 0){
     diff += 24*60*60*1000;
   }
+
   let h = Math.floor(diff/(1000*60*60));
   let m = Math.floor((diff%(1000*60*60))/(1000*60));
+
   return String(h).padStart(2,'0')+":"+String(m).padStart(2,'0');
 }
 
-function startApp(){
-
-  const now = new Date();
-  const times = SunCalc.getTimes(now,lat,lng);
-  const sunset = times.sunset;
-
+function startClock(sunset){
   setInterval(()=>{
-    const current = new Date();
-    let diff = current - sunset;
-    if(diff<0) diff += 24*60*60*1000;
+    const now = new Date();
+    let diff = now - sunset;
+    if(diff < 0){
+      diff += 24*60*60*1000;
+    }
 
     let h = Math.floor(diff/(1000*60*60));
     let m = Math.floor((diff%(1000*60*60))/(1000*60));
@@ -35,21 +38,30 @@ function startApp(){
       String(s).padStart(2,'0');
 
   },1000);
-
-  const coordinates = new adhan.Coordinates(lat,lng);
-  const params = adhan.CalculationMethod.MuslimWorldLeague();
-  const prayerTimes = new adhan.PrayerTimes(coordinates, now, params);
-
-  document.getElementById("fajr").textContent = toGhorobi(prayerTimes.fajr,sunset);
-  document.getElementById("sunrise").textContent = toGhorobi(prayerTimes.sunrise,sunset);
-  document.getElementById("dhuhr").textContent = toGhorobi(prayerTimes.dhuhr,sunset);
-  document.getElementById("asr").textContent = toGhorobi(prayerTimes.asr,sunset);
-  document.getElementById("maghrib").textContent = toGhorobi(prayerTimes.maghrib,sunset);
-  document.getElementById("isha").textContent = toGhorobi(prayerTimes.isha,sunset);
 }
 
-navigator.geolocation.getCurrentPosition(pos=>{
+navigator.geolocation.getCurrentPosition(async pos=>{
+
   lat = pos.coords.latitude;
   lng = pos.coords.longitude;
-  startApp();
+
+  const sunTimes = SunCalc.getTimes(new Date(),lat,lng);
+  const sunset = sunTimes.sunset;
+
+  startClock(sunset);
+
+  const response = await fetch(
+    `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=2`
+  );
+
+  const data = await response.json();
+  const timings = data.data.timings;
+
+  document.getElementById("fajr").textContent = toGhorobi(timings.Fajr,sunset);
+  document.getElementById("sunrise").textContent = toGhorobi(timings.Sunrise,sunset);
+  document.getElementById("dhuhr").textContent = toGhorobi(timings.Dhuhr,sunset);
+  document.getElementById("asr").textContent = toGhorobi(timings.Asr,sunset);
+  document.getElementById("maghrib").textContent = toGhorobi(timings.Maghrib,sunset);
+  document.getElementById("isha").textContent = toGhorobi(timings.Isha,sunset);
+
 });
