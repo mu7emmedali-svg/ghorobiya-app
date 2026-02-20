@@ -3,69 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الساعة الغروبية الاحترافية</title>
+    <title>الساعة الغروبية</title>
     <link rel="manifest" href="manifest.json">
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(to bottom, #0f172a, #111827);
-            color: #d4af37;
-            text-align: center;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .bg {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Ccircle cx='650' cy='120' r='60' fill='%23d4af37'/%3E%3Ccircle cx='670' cy='110' r='60' fill='%23111727'/%3E%3C/svg%3E");
-            opacity: 0.1;
-            z-index: -1;
-        }
-        h1 { font-size: 1.8rem; margin-bottom: 10px; color: #ffd700; }
-        #clock {
-            font-size: 5rem;
-            margin: 10px 0;
-            font-weight: bold;
-            color: #ffd700;
-            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-        }
-        .info { font-size: 1.1rem; color: #aaa; margin-bottom: 20px; }
-        .card {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 25px;
-            width: 90%;
-            max-width: 350px;
-            margin: 0 auto;
-            border-radius: 20px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            backdrop-filter: blur(10px);
-        }
-        .prayer-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 5px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-            font-size: 1.2rem;
-        }
-        .prayer-row:last-child { border: none; }
-        .label { color: #eee; }
-        .time { color: #ffd700; font-weight: bold; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="bg"></div>
-    
     <h1>الساعة الغروبية</h1>
     <div id="clock">00:00:00</div>
-    
     <div class="info">
         <div id="location">جاري تحديد الموقع...</div>
         <div id="hijriDate">-- --- ---- هـ</div>
     </div>
-
     <div class="card">
         <div class="prayer-row"><span class="label">الفجر</span> <span class="time" id="fajr">--:--</span></div>
         <div class="prayer-row"><span class="label">الشروق</span> <span class="time" id="sunrise">--:--</span></div>
@@ -74,89 +23,6 @@
         <div class="prayer-row"><span class="label">المغرب</span> <span class="time" id="maghrib">00:00</span></div>
         <div class="prayer-row"><span class="label">العشاء</span> <span class="time" id="isha">--:--</span></div>
     </div>
-
-    <script>
-        let maghribMinutes = null;
-
-        function cleanTime(timeStr) {
-            return timeStr.split(" ")[0];
-        }
-
-        function toMinutes(timeStr) {
-            const [h, m] = cleanTime(timeStr).split(":").map(Number);
-            return h * 60 + m;
-        }
-
-        function formatGhorobi(timeStr) {
-            if (maghribMinutes === null) return "--:--";
-            let diff = toMinutes(timeStr) - maghribMinutes;
-            if (diff < 0) diff += 1440;
-            const h = Math.floor(diff / 60);
-            const m = diff % 60;
-            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-        }
-
-        async function init() {
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const { latitude: lat, longitude: lng } = pos.coords;
-                
-                // جلب أوقات الصلاة والتاريخ
-                const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=13`);
-                const data = await res.json();
-                const t = data.data.timings;
-                
-                maghribMinutes = toMinutes(t.Maghrib);
-
-                // تحديث الواجهة
-                document.getElementById("fajr").textContent = formatGhorobi(t.Fajr);
-                document.getElementById("sunrise").textContent = formatGhorobi(t.Sunrise);
-                document.getElementById("dhuhr").textContent = formatGhorobi(t.Dhuhr);
-                document.getElementById("asr").textContent = formatGhorobi(t.Asr);
-                document.getElementById("isha").textContent = formatGhorobi(t.Isha);
-                
-                const hj = data.data.date.hijri;
-                document.getElementById("hijriDate").textContent = `${hj.day} ${hj.month.ar} ${hj.year} هـ`;
-
-                // جلب اسم الموقع (حل مشكلة CORS و User-Agent)
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-                    headers: { 'User-Agent': 'GhorobiApp/1.0' }
-                })
-                .then(r => r.json())
-                .then(geo => {
-                    const city = geo.address.city || geo.address.town || "موقعك الحالي";
-                    document.getElementById("location").textContent = city;
-                }).catch(() => document.getElementById("location").textContent = "تم تحديد الموقع");
-
-            }, () => {
-                document.getElementById("location").textContent = "يرجى تفعيل الموقع";
-            });
-        }
-
-        function updateClock() {
-            if (maghribMinutes === null) return;
-            const now = new Date();
-            const currentTotalMin = now.getHours() * 60 + now.getMinutes();
-            let diff = currentTotalMin - maghribMinutes;
-            if (diff < 0) diff += 1440;
-
-            const h = Math.floor(diff / 60);
-            const m = diff % 60;
-            const s = now.getSeconds();
-
-            document.getElementById("clock").textContent = 
-                `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            
-            // إعادة تحميل البيانات عند الغروب (تغيير اليوم)
-            if (h === 0 && m === 0 && s === 0) init();
-        }
-
-        init();
-        setInterval(updateClock, 1000);
-
-        // تسجيل الـ Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
