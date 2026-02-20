@@ -1,44 +1,102 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الساعة الغروبية</title>
+  <meta charset="UTF-8">
+  <title>الساعة الغروبية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#111827">
+  <style>
+    body{
+      margin:0;
+      padding:0;
+      font-family: "Tahoma", sans-serif;
+      background:#0d1b2a;
+      color:white;
+      text-align:center;
+    }
 
-<link rel="stylesheet" href="style.css">
+    h1{
+      margin-top:30px;
+      font-size:32px;
+    }
 
-<script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
-<script src="https://unpkg.com/adhan@4.4.3/dist/adhan.min.js"></script>
+    #clock{
+      font-size:60px;
+      margin:20px 0;
+      font-weight:bold;
+      letter-spacing:3px;
+    }
+
+    .info-line{
+      margin:5px 0;
+      font-size:18px;
+      opacity:0.9;
+    }
+
+    .prayer-times{
+      margin-top:30px;
+      display:inline-block;
+      text-align:right;
+    }
+
+    .prayer-times div{
+      margin:6px 0;
+      font-size:18px;
+    }
+
+    .about-section{
+      margin:50px auto;
+      max-width:600px;
+      line-height:1.8;
+      font-size:17px;
+      opacity:0.95;
+    }
+
+    .about-section h2{
+      margin-bottom:15px;
+      font-size:24px;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="bg"></div>
+  <h1>الساعة الغروبية</h1>
 
-<h1>الساعة الغروبية</h1>
+  <div id="clock">00:00:00</div>
 
-<div id="location"></div>
-<div id="hijriDate"></div>
+  <div id="location" class="info-line"></div>
+  <div id="hijriDate" class="info-line"></div>
 
-<div id="clock">00:00:00</div>
-
-  
-  <div class="card">
-    <h3>أوقات الصلاة (غروبي)</h3>
-<p>الفجر: <span id="fajr"></span></p>
-<p>الشروق: <span id="sunrise"></span></p>
-<p>الظهر: <span id="dhuhr"></span></p>
-<p>العصر: <span id="asr"></span></p>
-<p>المغرب: <span id="maghrib"></span></p>
-<p>العشاء: <span id="isha"></span></p>
+  <div class="prayer-times">
+    <div>الفجر: <span id="fajr"></span></div>
+    <div>الشروق: <span id="sunrise"></span></div>
+    <div>الظهر: <span id="dhuhr"></span></div>
+    <div>العصر: <span id="asr"></span></div>
+    <div>المغرب: <span id="maghrib"></span></div>
+    <div>العشاء: <span id="isha"></span></div>
   </div>
-</div>
 
-<script src="script.js"></script>
+  <div class="about-section">
+    <h2>ما هي الساعة الغروبية؟</h2>
+    <p>
+      الساعة الغروبية نظام زمني قديم يبدأ فيه اليوم عند غروب الشمس،
+      حيث يُعتبر الغروب بداية يوم جديد، بخلاف النظام الحديث
+      الذي يبدأ عند منتصف الليل.
+    </p>
+    <p>
+      اعتمد المسلمون هذا النظام في عصور سابقة،
+      إذ كان مرتبطاً بحركة الشمس وتعاقب الليل والنهار،
+      وهو الأساس في حساب بدايات الأيام الهجرية.
+    </p>
+    <p>
+      يقوم هذا التطبيق بتحويل التوقيت المعاصر
+      إلى التوقيت الغروبي اعتماداً على موقعك الجغرافي
+      ووقت الغروب الفعلي في مدينتك.
+    </p>
+  </div>
+
+  <script src="script.js"></script>
+
 </body>
-
 </html>
-
-
