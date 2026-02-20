@@ -1,4 +1,4 @@
-let lat,lng;
+let lat, lng;
 
 function toGhorobi(timeString, sunsetDate){
   const parts = timeString.split(":");
@@ -13,7 +13,8 @@ function toGhorobi(timeString, sunsetDate){
   let h = Math.floor(diff/(1000*60*60));
   let m = Math.floor((diff%(1000*60*60))/(1000*60));
 
-  return String(h).padStart(2,'0')+":"+String(m).padStart(2,'0');
+  return String(h).padStart(2,'0') + ":" +
+         String(m).padStart(2,'0');
 }
 
 function startClock(sunsetDate){
@@ -30,8 +31,8 @@ function startClock(sunsetDate){
     let s = Math.floor((diff%(1000*60))/1000);
 
     document.getElementById("clock").textContent =
-      String(h).padStart(2,'0')+":"+
-      String(m).padStart(2,'0')+":"+
+      String(h).padStart(2,'0') + ":" +
+      String(m).padStart(2,'0') + ":" +
       String(s).padStart(2,'0');
 
   },1000);
@@ -47,32 +48,45 @@ navigator.geolocation.getCurrentPosition(async pos=>{
   );
 
   const data = await response.json();
-  const hijri = data.data.date.hijri;
-const timezone = data.meta.timezone;
-
-document.getElementById("location").textContent =
-"الموقع: " + timezone;
-
-document.getElementById("hijriDate").textContent =
-"التاريخ الهجري: " +
-hijri.day + " " +
-hijri.month.ar + " " +
-hijri.year + " هـ";
-  
   const timings = data.data.timings;
 
+  // ===== اسم الموقع =====
+  const hijri = data.data.date.hijri;
+  const timezone = data.meta.timezone;
+
+  document.getElementById("location").textContent =
+    "الموقع: " + timezone;
+
+  document.getElementById("hijriDate").textContent =
+    "التاريخ الهجري: " +
+    hijri.day + " " +
+    hijri.month.ar + " " +
+    hijri.year + " هـ";
+
+  // ===== الغروب =====
   const sunsetParts = timings.Sunset.split(":");
   const sunsetDate = new Date();
   sunsetDate.setHours(sunsetParts[0], sunsetParts[1], 0);
 
   startClock(sunsetDate);
 
-  document.getElementById("fajr").textContent = toGhorobi(timings.Fajr,sunsetDate);
-  document.getElementById("sunrise").textContent = toGhorobi(timings.Sunrise,sunsetDate);
-  document.getElementById("dhuhr").textContent = toGhorobi(timings.Dhuhr,sunsetDate);
-  document.getElementById("asr").textContent = toGhorobi(timings.Asr,sunsetDate);
-  document.getElementById("maghrib").textContent = toGhorobi(timings.Maghrib,sunsetDate);
-  document.getElementById("isha").textContent = toGhorobi(timings.Isha,sunsetDate);
+  // ===== أوقات الصلاة غروبي =====
+  document.getElementById("fajr").textContent =
+    toGhorobi(timings.Fajr, sunsetDate);
+
+  document.getElementById("sunrise").textContent =
+    toGhorobi(timings.Sunrise, sunsetDate);
+
+  document.getElementById("dhuhr").textContent =
+    toGhorobi(timings.Dhuhr, sunsetDate);
+
+  document.getElementById("asr").textContent =
+    toGhorobi(timings.Asr, sunsetDate);
+
+  document.getElementById("maghrib").textContent =
+    toGhorobi(timings.Maghrib, sunsetDate);
+
+  document.getElementById("isha").textContent =
+    toGhorobi(timings.Isha, sunsetDate);
 
 });
-
