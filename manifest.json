@@ -1,9 +1,23 @@
 {
   "name": "الساعة الغروبية",
   "short_name": "الغروبية",
-  "start_url": ".",
+  "description": "تطبيق لحساب الوقت الغروبي وأوقات الصلاة بناءً على موقعك",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#111827",
-  "icons": []
+  "background_color": "#0f172a",
+  "theme_color": "#d4af37",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3222/3222800.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/192/3222/3222800.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
 }
